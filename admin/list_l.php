@@ -1,4 +1,4 @@
-<?php 
+sale<?php 
 $menu = "sale";
 include("header.php");
 
@@ -29,278 +29,233 @@ if(isset($_GET['p_id']) && isset($_GET['act'])) {
         exit();
     }
 }
+
+// เพิ่ม CSS และ JavaScript
+echo '<link rel="stylesheet" href="sale.css">';
+echo '<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>';
+echo '<script src="sale.js"></script>';
 ?>
 
 <div class="content-wrapper">
-    <section class="content">
-        <div class="card card-gray w-100">
-            <div class="card-header">
-                <h3 class="card-title">ระบบขายสินค้า</h3>
-            </div>
-            
-            <div class="card-body">
-                <!-- ช่องสแกนบาร์โค้ดและหัวตาราง -->
-                <div class="fixed-search-bar">
-                    <form id="barcode-form" onsubmit="return handleBarcodeSubmit(event)" class="px-3 pt-3">
-                        <div class="input-group input-group-lg">
-                            <input type="text" 
-                                id="barcode-input"
-                                class="form-control py-3"
-                                placeholder="สแกนบาร์โค้ดสินค้า"
-                                autocomplete="off"
-                                style="font-size: 24px !important;"
-                                autofocus>
-                                <div class="input-group-append" style="margin-left: 20px;">
-                                    <button class="btn btn-primary search-button" type="submit">
-                                        <div class="d-flex align-items-center justify-content-center">
-                                            <i class="fas fa-search me-2"></i>
-                                            <span class="search-text">ค้นหาสินค้า</span>
-                                        </div>
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
-                    <!-- หัวตาราง -->
-                    <div class="table-header mt-1">
-                        <div class="table-wrapper">
-                            <table class="table table-bordered mb-0">
-                                <thead>
-                                    <tr class="bg-primary text-white">
-                                        <th style="width: 5%;" class="text-center align-middle">ลำดับ</th>
-                                        <th style="width: 10%;" class="text-center align-middle">บาร์โค้ด</th>
-                                        <th style="width: 34%;" class="text-center align-middle">สินค้า</th>
-                                        <th style="width: 10%;" class="text-center align-middle">จำนวน</th>
-                                        <th style="width: 10%;" class="text-center align-middle">ราคา</th>
-                                        <th style="width: 7%;" class="text-center align-middle">ส่วนลด</th>
-                                        <th style="width: 12%;" class="text-center align-middle">รวม</th>
-                                        <th style="width: 8%;" class="text-center align-middle">เพิ่ม/ลด</th>
-                                        <th style="width: 6%;" class="text-center align-middle">ลบ</th>
-                                    </tr>
-                                </thead>
-                            </table>
+    <!-- ช่องสแกนบาร์โค้ดและหัวตาราง -->
+    <div class="d-flex">
+        <form id="barcode-form" onsubmit="return handleBarcodeSubmit(event)" class="justify-content-start">
+            <div class="input-group bg-success">
+                <input type="text" 
+                    id="barcode-input"
+                    class="form-control py-4"
+                    placeholder="สแกนบาร์โค้ดสินค้า"
+                    autocomplete="off"
+                    autofocus>
+                <div class="input-group-append">
+                    <button class="btn btn-primary search-button" type="submit">
+                        <div class="d-flex align-items-center justify-content-center">
+                            <i class="fas fa-search me-2"></i>
+                            <span class="search-text">ค้นหาสินค้า</span>
                         </div>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- ตารางสินค้า -->
+    <div class="card-body">
+        <div class="card card-gray">
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered table-striped">
+                    <thead>
+                        <tr class="bg-primary text-white">
+                            <th style="width: 5%;" class="text-center align-middle">ลำดับ</th>
+                            <th style="width: 10%;" class="text-center align-middle">บาร์โค้ด</th>
+                            <th style="width: 34%;" class="text-center align-middle">สินค้า</th>
+                            <th style="width: 10%;" class="text-center align-middle">จำนวน</th>
+                            <th style="width: 10%;" class="text-center align-middle">ราคา</th>
+                            <th style="width: 7%;" class="text-center align-middle">ส่วนลด</th>
+                            <th style="width: 12%;" class="text-center align-middle">รวม</th>
+                            <th style="width: 8%;" class="text-center align-middle">เพิ่ม/ลด</th>
+                            <th style="width: 6%;" class="text-center align-middle">ลบ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php
+                        $total = 0;
+                        if(!empty($_SESSION['cart'])) {
+                            foreach($_SESSION['cart'] as $p_id=>$qty) {
+                                $sql = "SELECT * FROM tbl_product WHERE p_id=$p_id";
+                                $query = mysqli_query($condb, $sql);
+                                if ($query) {
+                                    $row = mysqli_fetch_array($query);
+                                    if ($row) {
+                                        $sum = $row['p_price'] * $qty;
+                                        $total += $sum;
+                                        ?>
+                                        <tr>
+                                            <td class="text-center" style="font-size: 22px; vertical-align: middle;"><?= @$i+=1 ?></td>
+                                            <td class="text-center" style="font-size: 22px; vertical-align: middle;"><?= $p_id ?></td>
+                                            <td style="font-size: 22px; vertical-align: middle;">
+                                                <?= $row["p_name"] ?>
+                                                <span style="font-size: 18px; color: #666;">สต๊อก <?= $row['p_qty'] ?></span>
+                                            </td>
+                                            <td class="text-center" style="vertical-align: middle;">
+                                                <input type="number" 
+                                                    name="amount[<?= $p_id ?>]" 
+                                                    value="<?= $qty ?>" 
+                                                    class="form-control update-qty" 
+                                                    min="1" 
+                                                    max="<?= $row['p_qty'] ?>"
+                                                    data-id="<?= $p_id ?>"
+                                                    data-price="<?= $row["p_price"] ?>"
+                                                    oninput="updatePrice(this)"
+                                                    style="font-size: 22px; height: auto; padding: 10px;"/>
+                                            </td>
+                                            <td class="text-right price-<?= $p_id ?>" style="font-size: 22px; vertical-align: middle;">
+                                                <?= number_format($row["p_price"],2) ?>
+                                            </td>
+                                            <td class="text-center" style="vertical-align: middle;">
+                                                <input type="number"
+                                                    name="discount[<?= $p_id ?>]"
+                                                    value="<?= isset($_SESSION['discount'][$p_id]) ? $_SESSION['discount'][$p_id] : 0 ?>"
+                                                    class="form-control discount-input"
+                                                    min="0"
+                                                    max="<?= $sum ?>"
+                                                    data-id="<?= $p_id ?>"
+                                                    style="font-size: 22px; height: auto; padding: 10px;"
+                                                    oninput="updatePrice($(this).closest('tr').find('.update-qty'))"/>
+                                            </td>
+                                            <td class="text-right sum-<?= $p_id ?>" style="font-size: 22px; vertical-align: middle;">
+                                                <?= number_format($sum,2) ?>
+                                            </td>
+                                            <td class="text-center" style="vertical-align: middle;">
+                                                <div class="btn-group">
+                                                    <button type="button" 
+                                                            class="btn btn-danger btn-lg"
+                                                            onclick="decrementQuantity(this)"
+                                                            data-id="<?= $p_id ?>">
+                                                        <i class="fas fa-minus"></i>
+                                                    </button>
+                                                    <button type="button" 
+                                                            class="btn btn-success btn-lg"
+                                                            onclick="incrementQuantity(this)"
+                                                            data-id="<?= $p_id ?>"
+                                                            data-max="<?= $row['p_qty'] ?>">
+                                                        <i class="fas fa-plus"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                            <td class="text-center" style="vertical-align: middle;">
+                                                <a href="list_l.php?p_id=<?= $p_id ?>&act=remove" 
+                                                class="btn btn-danger btn-lg">
+                                                    <i class="fas fa-trash"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        <?php
+                                    }
+                                }
+                            }
+                        }
+                        ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <?php
+    $total_discount = 0;
+    if(!empty($_SESSION['cart'])) {
+        foreach($_SESSION['cart'] as $p_id=>$qty) {
+            if(isset($_SESSION['discount'][$p_id])) {
+                $total_discount += $_SESSION['discount'][$p_id];
+            }
+        }
+    }
+    ?>
+
+    <!-- แถบด้านล่าง -->
+    <div class="fixed-bottom-bar">
+        <div class="container-fluid">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="real-time-date text-left">
+                    <span id="current-date" style="font-size: 20px; font-weight: bold;"></span>
+                </div>
+                <div class="d-flex justify-content-center align-items-center flex-nowrap col-4">
+                    <div class="mr-4">
+                        <span class="total-label">ส่วนลดรวม:</span>
+                        <span class="total-discount" id="total-discount"><?= number_format($total_discount,2) ?></span>
+                        <span class="total-currency">บาท</span>
+                    </div>
+                    <div class="total-separator mx-3">|</div>
+                    <div>
+                        <span class="total-label">ราคารวม:</span>
+                        <span class="total-amount" id="total-amount"><?= number_format($total,2) ?></span>
+                        <span class="total-currency">บาท</span>
                     </div>
                 </div>
-                
-                <div class="table-responsive" style="margin-top: 80px;">
-                    <?php include('cart_a_2.php'); ?>
+                <div class="col-4">
+                    <button type="button" class="btn btn-primary btn-lg checkout-btn" style="font-size: 24px; padding: 10px 200px;" onclick="showCheckout()">
+                        <i class="fas fa-cash-register"></i> คิดเงิน
+                    </button>
                 </div>
             </div>
         </div>
-    </section>
+    </div>
+
+    <!-- หน้าต่างคิดเงิน -->
+    <div id="checkout-overlay">
+        <div class="container-fluid h-100">
+            <div class="row justify-content-center align-items-center h-100">
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="card-title mb-0 float-left">ชำระเงิน</h5>
+                            <button type="button" class="close text-white" onclick="hideCheckout()">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label><b>ยอดชำระ</b></label>
+                                <input type="text" id="total_amount" class="form-control form-control-lg" 
+                                    value="฿<?= number_format($total,2) ?>" readonly>
+                            </div>
+
+                            <div class="form-group">
+                                <label><b>รับเงิน</b></label>
+                                <input type="number" id="pay_amount2" 
+                                    class="form-control form-control-lg" 
+                                    required min="0" 
+                                    step="0.01"
+                                    onkeyup="calculateChange();">
+                            </div>
+
+                            <div class="form-group">
+                                <label><b>เงินทอน</b></label>
+                                <input type="text" id="change_amount" 
+                                    class="form-control form-control-lg" readonly>
+                            </div>
+
+                            <div class="row mt-4">
+                                <div class="col-6">
+                                    <button type="button" class="btn btn-secondary btn-lg btn-block" 
+                                            onclick="hideCheckout()">
+                                        ยกเลิก
+                                    </button>
+                                </div>
+                                <div class="col-6">
+                                    <button type="button" class="btn btn-primary btn-lg btn-block" 
+                                            onclick="processPayment()">
+                                        ยืนยัน
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
-
-
-
-<script>
-let isProcessing = false;
-
-function handleBarcodeSubmit(event) {
-    event.preventDefault();
-    const barcodeInput = document.getElementById('barcode-input');
-    const barcodeValue = barcodeInput.value.trim();
-    
-    if(barcodeValue && !isProcessing) {
-        addToCartByBarcode(barcodeValue);
-    }
-    
-    barcodeInput.value = '';
-    barcodeInput.focus();
-    return false;
-}
-function addToCartByBarcode(productId) {
-    if(isProcessing) return;
-    isProcessing = true;
-
-    $.ajax({
-        url: 'check_product.php',
-        type: 'POST',
-        data: { p_id: productId },
-        success: function(response) {
-            if(response.trim() === 'found') {
-                // ถ้าเจอสินค้า ให้เพิ่มเข้าตะกร้า
-                $.ajax({
-                    url: 'update_cart_qty.php',
-                    type: 'POST',
-                    data: {
-                        p_id: productId,
-                        add_new: true
-                    },
-                    success: function(updateResponse) {
-                        try {
-                            const result = JSON.parse(updateResponse);
-                            if(result.success) {
-                                reloadCartTable();
-                            } else {
-                                alert(result.message || 'เกิดข้อผิดพลาดในการเพิ่มสินค้า');
-                            }
-                        } catch(e) {
-                            reloadCartTable(); // ถ้าไม่สามารถแปลง JSON ได้ ให้โหลดตารางใหม่
-                        }
-                    },
-                    error: function() {
-                        alert('เกิดข้อผิดพลาดในการเพิ่มสินค้า');
-                    },
-                    complete: function() {
-                        isProcessing = false;
-                        $('#barcode-input').val('').focus();
-                    }
-                });
-            } else {
-                alert('ไม่พบสินค้าหรือบาร์โค้ดไม่ถูกต้อง');
-                isProcessing = false;
-                $('#barcode-input').val('').focus();
-            }
-        },
-        error: function() {
-            alert('เกิดข้อผิดพลาดในการตรวจสอบสินค้า');
-            isProcessing = false;
-            $('#barcode-input').val('').focus();
-        }
-    });
-}
-
-function reloadCartTable() {
-    $.ajax({
-        url: 'cart_a_2.php',
-        type: 'GET',
-        success: function(response) {
-            $('.table-responsive').html(response);
-            // รีเซ็ตอีเวนต์ต่างๆ หลังจากโหลดตารางใหม่
-            setupEventHandlers();
-        }
-    });
-}
-
-function setupEventHandlers() {
-    // เพิ่ม event listeners สำหรับปุ่มและ input ต่างๆ
-    $('.discount-input').on('input', function() {
-        updatePrice($(this).closest('tr').find('.update-qty'));
-    });
-    
-    $('.update-qty').on('input', function() {
-        updatePrice(this);
-    });
-}
-
-
-function addToCart(productId) {
-    window.location.href = `list_l.php?p_id=${productId}&act=add`;
-}
-
-$(document).ready(function() {
-    $('#barcode-input').on('keydown', function(e) {
-        if (e.keyCode === 13) { // ตรวจจับปุ่ม Enter
-            e.preventDefault();
-            let barcodeValue = $(this).val().trim();
-
-            if (barcodeValue === '') {
-                if($('.table tbody tr').length > 0) {
-                    showCheckout();
-                }
-            } else {
-                addToCartByBarcode(barcodeValue);
-            }
-            $(this).val('').focus();
-        }
-    });
-
-    // Setup initial event handlers
-    setupEventHandlers();
-});
-
-// โฟกัสที่ช่องบาร์โค้ดเมื่อโหลดหน้า
-document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('barcode-input').focus();
-});
-</script>
-
-<style>
-/* ปรับปรุง fixed-search-bar */
-.fixed-search-bar {
-    position: fixed;
-    top: 40px;
-    left: 0;
-    right: 0;
-    background: white;
-    z-index: 1000;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    padding: 10px 0;
-}
-
-.table-header {
-    padding: 0 15px;
-    max-width: 100%;
-    margin: 0 auto;
-}
-
-.table-header .table {
-    table-layout: fixed;
-    margin: 0 auto;
-}
-
-/* ทำให้ความกว้างของคอลัมน์ในหัวตารางตรงกับตารางด้านล่าง */
-.table-header .table th,
-.table-responsive .table td {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.table-header .table {
-    margin-bottom: 0;
-}
-
-/* ปรับขนาดช่อง input */
-.input-group-lg > .form-control {
-    min-height: 60px;
-}
-
-/* ปรับขนาดปุ่ม */
-.search-button {
-    min-height: 60px !important;
-    min-width: 200px !important;
-    padding: 8px 20px !important;
-    line-height: 1.2 !important;
-}
-
-/* ขนาดไอคอน */
-.search-button i {
-    font-size: 24px !important;
-}
-
-/* ขนาดตัวหนังสือในปุ่ม */
-.search-text {
-    font-size: 25px !important;
-    font-weight: bold !important;
-}
-
-/* ปรับ placeholder */
-.input-group-lg > .form-control::placeholder {
-    font-size: 24px !important;
-}
-
-/* ปรับความกว้างของฟอร์มค้นหา */
-#barcode-form {
-    max-width: 50%;
-    margin: 0 auto;
-}
-
-/* เพิ่มระยะห่างสำหรับเนื้อหาตาราง */
-.table-responsive {
-    padding-top: 0px;
-}
-
-/* ให้ตารางมีความกว้างเท่ากับหัวตาราง */
-.table {
-    width: 99%;
-    margin: 0;
-}
-
-/* ซ่อนหัวตารางเดิมในส่วนของ cart_a_2.php */
-.table-responsive .table thead {
-    display: none;
-}
-</style>
 
 <?php include('footer.php'); ?>
