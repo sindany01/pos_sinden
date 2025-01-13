@@ -1,14 +1,29 @@
-// Global Variables
 let isProcessing = false;
+let inputTimeout = null;
 
-// จัดการการส่งฟอร์มบาร์โค้ด
+// อัพเดทวันที่และเวลาแบบ Real-time
+function updateDateTime() {
+    const now = new Date();
+    const options = { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+    };
+    document.getElementById('current-date').textContent = 
+        now.toLocaleString('th-TH', options);
+}
+
+// ฟังก์ชันจัดการการส่ง form barcode
 function handleBarcodeSubmit(event) {
     event.preventDefault();
     const barcodeInput = document.getElementById('barcode-input');
     const barcodeValue = barcodeInput.value.trim();
     
     if(barcodeValue && !isProcessing) {
-        window.location.href = `list_l.php?p_id=${barcodeValue}&act=add`;
+        addToCartByBarcode(barcodeValue);
     }
     
     barcodeInput.value = '';
@@ -16,68 +31,139 @@ function handleBarcodeSubmit(event) {
     return false;
 }
 
-// เพิ่ม/ลดจำนวนสินค้า
-function updateQuantity(p_id, qty) {
+// เพิ่มสินค้าลงตะกร้าด้วยบาร์โค้ด
+function addToCartByBarcode(productId) {
+    if(isProcessing) return;
+    isProcessing = true;
+
     $.ajax({
-        url: 'update_cart_qty.php',
+        url: 'check_product.php',
         type: 'POST',
-        data: {
-            p_id: p_id,
-            qty: qty
+        data: { p_id: productId },
+        success: function(response) {
+            if(response.trim() === 'found') {
+                $.ajax({
+                    url: 'update_cart_qty.php',
+                    type: 'POST',
+                    data: {
+                        p_id: productId,
+                        qty: 1,
+                        add_new: true
+                    },
+                    success: function(updateResponse) {
+                        reloadCartTable();
+                        setTimeout(() => {
+                            bindCheckoutEnterKey();
+                        }, 100);
+                    },
+                    error: function() {
+                        alert('เกิดข้อผิดพลาดในการเพิ่มสินค้า');
+                    },
+                    complete: function() {
+                        isProcessing = false;
+                    }
+                });
+            } else {
+                alert('ไม่พบสินค้าหรือบาร์โค้ดไม่ถูกต้อง');
+                isProcessing = false;
+            }
         },
-        success: function() {
-            location.reload();
+        error: function() {
+            alert('เกิดข้อผิดพลาดในการตรวจสอบสินค้า');
+            isProcessing = false;
         }
     });
 }
 
-// ลดจำนวนสินค้า
-function decrementQuantity(button) {
-    const p_id = $(button).data('id');
-    const qtyInput = $(button).closest('tr').find('.update-qty');
-    const currentQty = parseInt(qtyInput.val());
+// โหลดตารางสินค้าใหม่
+function reloadCartTable() {
+    location.reload();
+}
+
+// Setup event handlers
+function setupEventHandlers() {
+    $('.discount-input').on('input', function() {
+        if (inputTimeout) {
+            clearTimeout(inputTimeout);
+        }
+        
+        const input = $(this);
+        updatePrice(input.closest('tr').find('.update-qty'));
+        
+        inputTimeout = setTimeout(() => {
+            if (!input.is(':focus')) return;
+            $('#barcode-input').focus();
+        }, 1500);
+    });
     
-    if (currentQty > 1) {
-        updateQuantity(p_id, currentQty - 1);
-    } else {
-        alert('ไม่สามารถลดจำนวนสินค้าได้ต่ำกว่า 1');
-    }
+    $('.update-qty').on('input', function() {
+        if (inputTimeout) {
+            clearTimeout(inputTimeout);
+        }
+        
+        const input = $(this);
+        updatePrice(this);
+        
+        inputTimeout = setTimeout(() => {
+            if (!input.is(':focus')) return;
+            $('#barcode-input').focus();
+        }, 1500);
+    });
+
+    $('.discount-input, .update-qty').on('blur', function() {
+        if (inputTimeout) {
+            clearTimeout(inputTimeout);
+        }
+    });
 }
 
-// เพิ่มจำนวนสินค้า
-function incrementQuantity(button) {
-    const p_id = $(button).data('id');
-    const maxQty = parseInt($(button).data('max'));
-    const qtyInput = $(button).closest('tr').find('.update-qty');
-    const currentQty = parseInt(qtyInput.val());
-    
-    if (currentQty < maxQty) {
-        updateQuantity(p_id, currentQty + 1);
-    } else {
-        alert('สินค้าในสต๊อกไม่เพียงพอ');
-    }
-}
-
-// ลบสินค้า
-function removeItem(p_id) {
-    if(confirm('ต้องการลบสินค้านี้ใช่หรือไม่?')) {
-        window.location.href = `list_l.php?p_id=${p_id}&act=remove`;
-    }
-}
-
-// อัพเดทราคา
+// อัพเดทราคาสินค้า
 function updatePrice(input) {
-    const tr = $(input).closest('tr');
-    const p_id = $(input).data('id');
-    const qty = parseInt($(input).val());
-    const price = parseFloat($(input).data('price'));
-    const discount = parseFloat(tr.find('.discount-input').val()) || 0;
+    var tr = $(input).closest('tr');
+    var p_id = $(input).data('id');
+    var qty = parseInt($(input).val());
+    var price = parseFloat($(input).data('price'));
+    var discount = parseFloat(tr.find('.discount-input').val()) || 0;
     
-    // อัพเดทราคารวมของสินค้า
-    const total = (price * qty) - discount;
-    tr.find('.sum-' + p_id).text(total.toFixed(2));
+    var subtotal = price * qty;
+    var total_after_discount = subtotal - discount;
+    
+    if (total_after_discount < 0) {
+        total_after_discount = 0;
+        tr.find('.discount-input').val(subtotal);
+        discount = subtotal;
+    }
 
-    // อัพเดทฐานข้อมูล
+    tr.find('.sum-' + p_id).text(total_after_discount.toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }));
+
+    var cart_total = 0;
+    var total_discount = 0;
+    
+    $('.update-qty').each(function() {
+        var item_tr = $(this).closest('tr');
+        var item_qty = parseInt($(this).val());
+        var item_price = parseFloat($(this).data('price'));
+        var item_discount = parseFloat(item_tr.find('.discount-input').val()) || 0;
+        var item_total = (item_price * item_qty) - item_discount;
+        
+        if (item_total < 0) item_total = 0;
+        cart_total += item_total;
+        total_discount += item_discount;
+    });
+
+    $('#total-amount').text(cart_total.toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }));
+
+    $('#total-discount').text(total_discount.toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }));
+
     $.ajax({
         url: 'update_cart_qty.php',
         type: 'POST',
@@ -86,63 +172,113 @@ function updatePrice(input) {
             qty: qty,
             discount: discount
         },
-        success: function() {
-            // คำนวณยอดรวมทั้งหมด
-            let cart_total = 0;
-            let total_discount = 0;
-            
-            $('.update-qty').each(function() {
-                const item_tr = $(this).closest('tr');
-                const item_qty = parseInt($(this).val());
-                const item_price = parseFloat($(this).data('price'));
-                const item_discount = parseFloat(item_tr.find('.discount-input').val()) || 0;
-                
-                cart_total += (item_price * item_qty) - item_discount;
-                total_discount += item_discount;
-            });
-
-            // อัพเดทการแสดงผล
-            $('#total-amount').text(cart_total.toFixed(2));
-            $('#total-discount').text(total_discount.toFixed(2));
+        success: function(response) {
+            console.log('อัปเดตแล้ว:', response);
         }
     });
 }
 
-// แสดงหน้าชำระเงิน
-function showCheckout() {
-    const totalAmount = $('#total-amount').text();
-    $('#total_amount').val('฿' + totalAmount);
-    $('#checkout-overlay').removeClass('d-none');
-    $('#pay_amount2').val('').focus();
+// ลดจำนวนสินค้า
+function decrementQuantity(button) {
+    var p_id = $(button).data('id');
+    var qtyInput = button.closest('tr').querySelector('.update-qty');
+    var currentQty = parseInt(qtyInput.value);
+    
+    if (currentQty > 1) {
+        qtyInput.value = currentQty - 1;
+        updatePrice(qtyInput);
+        
+        $.ajax({
+            url: 'update_cart_qty.php',
+            type: 'POST',
+            data: {
+                p_id: p_id,
+                qty: currentQty - 1
+            }
+        });
+    } else {
+        alert('ไม่สามารถลดจำนวนสินค้าได้ เนื่องจากต้องมีอย่างน้อย 1 ชิ้น');
+    }
+    $('#barcode-input').focus();
 }
 
-// ซ่อนหน้าชำระเงิน
+// เพิ่มจำนวนสินค้า
+function incrementQuantity(button) {
+    var p_id = $(button).data('id');
+    var maxQty = parseInt($(button).data('max'));
+    var qtyInput = button.closest('tr').querySelector('.update-qty');
+    var currentQty = parseInt(qtyInput.value);
+    
+    if (currentQty < maxQty) {
+        qtyInput.value = currentQty + 1;
+        updatePrice(qtyInput);
+        
+        $.ajax({
+            url: 'update_cart_qty.php',
+            type: 'POST',
+            data: {
+                p_id: p_id,
+                qty: currentQty + 1
+            }
+        });
+    } else {
+        alert('ไม่สามารถเพิ่มจำนวนได้ เนื่องจากเกินจำนวนในสต็อก');
+    }
+    $('#barcode-input').focus();
+}
+
+// แสดงหน้าคิดเงิน
+function showCheckout() {
+    const currentTotal = $('#total-amount').text().trim();
+    $('#total_amount').val('฿' + currentTotal);
+    
+    $('#checkout-overlay').fadeIn(function() {
+        $('#pay_amount2').val('').focus();
+        $('#change_amount').val('');
+    });
+}
+
+// ซ่อนหน้าคิดเงิน
 function hideCheckout() {
-    $('#checkout-overlay').addClass('d-none');
+    $('#checkout-overlay').fadeOut();
     $('#barcode-input').focus();
 }
 
 // คำนวณเงินทอน
 function calculateChange() {
-    const total = parseFloat($('#total_amount').val().replace(/[^0-9.]/g, ''));
-    const paid = parseFloat($('#pay_amount2').val()) || 0;
-    const change = paid - total;
+    var total = parseFloat(document.getElementById('total_amount').value.replace(/[^0-9.]/g, ''));
+    var paid = parseFloat(document.getElementById('pay_amount2').value) || 0;
+    var change = paid - total;
     
-    $('#change_amount').val(change >= 0 ? '฿' + change.toFixed(2) : '฿0.00');
+    if (!isNaN(change)) {
+        document.getElementById('change_amount').value = '฿' + change.toFixed(2);
+    } else {
+        document.getElementById('change_amount').value = '฿0.00';
+    }
+}
+
+// เคลียร์ตารางสินค้า
+function clearCartTable() {
+    $('.table tbody').empty();
+    $('#total-amount').text('0.00');
+    hideCheckout();
+    $('#pay_amount2').val('');
+    $('#change_amount').val('');
+    $('#barcode-input').focus();
 }
 
 // ประมวลผลการชำระเงิน
 function processPayment() {
-    const payAmount = parseFloat($('#pay_amount2').val());
-    const totalAmount = parseFloat($('#total_amount').val().replace(/[^0-9.]/g, ''));
+    var pay_amount = $('#pay_amount2').val();
+    var total_amount = $('#total_amount').val().replace(/[^0-9.]/g, '');
     
-    if(!payAmount) {
+    if(!pay_amount) {
         alert('กรุณาระบุจำนวนเงินที่รับ');
         return;
     }
     
-    if(payAmount < totalAmount) {
-        alert('จำนวนเงินไม่เพียงพอ');
+    if(parseFloat(pay_amount) < parseFloat(total_amount)) {
+        alert('จำนวนเงินไม่พอ');
         return;
     }
     
@@ -150,52 +286,64 @@ function processPayment() {
         url: 'saveorder_a.php',
         type: 'POST',
         data: {
-            pay_amount: totalAmount,
-            pay_amount2: payAmount,
-            mem_id: 1
+            pay_amount: total_amount,
+            pay_amount2: pay_amount,
+            mem_id: 1 // ต้องแก้ไขให้ตรงกับ ID สมาชิกที่ login
         },
-        success: function() {
-            alert('บันทึกรายการเรียบร้อย');
-            $.post('clear_cart_session.php', function() {
-                location.reload();
+        success: function(response) {
+            clearCartTable();
+            
+            $.ajax({
+                url: 'clear_cart_session.php',
+                type: 'POST',
+                success: function() {
+                    console.log('Cart session cleared');
+                    location.reload();
+                }
             });
-        },
-        error: function() {
-            alert('เกิดข้อผิดพลาดในการบันทึกรายการ');
         }
     });
 }
 
-// Event Handlers
+// Event Listeners เมื่อโหลดหน้า
 $(document).ready(function() {
-    // จัดการ input events
-    $('.update-qty, .discount-input').on('change', function() {
-        updatePrice($(this).closest('tr').find('.update-qty'));
-    });
+    // อัพเดทวันที่และเวลา
+    updateDateTime();
+    setInterval(updateDateTime, 1000);
     
-    // ESC key handler
-    $(document).keydown(function(e) {
-        if(e.key === "Escape") {
-            hideCheckout();
-        }
-    });
-    
-    // Enter key handler สำหรับช่องบาร์โค้ด
-    $('#barcode-input').keydown(function(e) {
-        if(e.keyCode === 13) {
+    // Event listener สำหรับช่องบาร์โค้ด
+    $('#barcode-input').on('keydown', function(e) {
+        if (e.keyCode === 13) {
             e.preventDefault();
-            const value = $(this).val().trim();
-            
-            if(value === '') {
+            let barcodeValue = $(this).val().trim();
+
+            if(barcodeValue === '') {
                 if($('.table tbody tr').length > 0) {
                     showCheckout();
                 }
             } else {
-                handleBarcodeSubmit(e);
+                addToCartByBarcode(barcodeValue);
             }
+            $(this).val('').focus();
         }
     });
+
+    // Setup event handlers
+    setupEventHandlers();
     
     // โฟกัสที่ช่องบาร์โค้ด
     $('#barcode-input').focus();
+    
+    // ป้องกันการ submit form
+    $('.btn-success').on('click', function(e) {
+        e.preventDefault();
+        return false;
+    });
+});
+
+// Event listener สำหรับปุ่ม ESC
+$(document).keydown(function(e) {
+    if (e.key === "Escape") {
+        hideCheckout();
+    }
 });

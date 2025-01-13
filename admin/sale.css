@@ -1,218 +1,267 @@
-/* ธีมหลัก */
-:root {
-    --primary-orange: #ff6b35;
-    --secondary-orange: #ff9466;
-    --light-orange: #fff0eb;
-    --white: #ffffff;
-    --gray-100: #f8f9fa;
-    --gray-200: #e9ecef;
-    --text-dark: #343a40;
-}
-
-/* Reset และ Base Styles */
+/* Reset CSS */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-body {
-    font-family: 'Prompt', sans-serif;
-    font-size: 18px;
-    line-height: 1.6;
-    background-color: var(--gray-100);
+html, body {
+    height: 100%;
+    background-color: #f4f6f9;
 }
 
 /* Layout หลัก */
 .content-wrapper {
-    min-height: calc(100vh - 140px);
-    padding: 2rem;
-    background-color: var(--white);
-    margin-top: 60px; /* เพิ่มระยะห่างจาก navbar */
+    min-height: calc(100vh - 120px); /* ลบความสูงของ fixed bottom bar */
+    padding: 20px;
+    background-color: rgb(231, 230, 152);
 }
 
-/* ส่วนค้นหาด้านบน */
-.search-section {
-    position: fixed;
-    top: 80px; /* ปรับให้ติดอยู่ใต้ navbar */
-    z-index: 99; /* ปรับ z-index ให้ต่ำกว่า navbar */
-    background: var(--white);
-    padding: 1rem;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    margin-bottom: 2rem;
+/* ส่วนหัวและการ์ดหลัก */
+.card.card-gray {
+    height: 100%;
+    width: 80%;
+    min-height: calc(85vh - 160px);
+    border-radius: 5px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    background-color: rgba(253, 28, 196, 0.5);
+    margin-top: 80px;
+}
+
+.card-body {
+    padding: 0;
+    height: calc(100% - 60px);
+}
+
+/* ช่องค้นหา */
+.input-group {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background: white;
+    padding: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    max-width: 1200px;
     width: 100%;
-}
-
-.search-input {
-    font-size: 24px !important;
-    padding: 1rem 1.5rem !important;
-    border: 2px solid var(--primary-orange) !important;
-    border-radius: 10px 0 0 10px !important;
-    background-color: var(--white) !important;
-}
-
-.search-button {
-    font-size: 30px !important;
-    padding: 2!important;
-    background-color: var(--primary-orange) !important;
-    border: none !important;
-    border-radius: 0 10px 10px 0 !important;
-    color: var(--white) !important;
+    margin: 0 auto;
 }
 
 /* ตารางสินค้า */
-.product-table {
-    background: var(--white);
-    border-radius: 15px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    margin-bottom: 140px;
+.table-responsive {
+    margin-bottom: 120px;
 }
 
-.table thead th {
-    background-color: var(--primary-orange);
-    color: var(--white);
-    font-size: 22px;
-    padding: 1.5rem;
-    border: none;
+.table {
+    width: 100% !important;
+    background: rgb(28, 211, 116) !important;
 }
 
-.table tbody td {
-    font-size: 20px;
-    padding: 1.2rem;
+.table thead tr {
+    background: rgb(78, 255, 223);
+    color: white;
+}
+
+.table th {
+    font-size: 24px;
+    padding: 15px;
+    text-align: center;
     vertical-align: middle;
-    border-bottom: 1px solid var(--gray-200);
+    background: rgb(242, 128, 22);
 }
 
-/* Input fields */
-.quantity-input {
-    font-size: 22px !important;
-    padding: 0.8rem !important;
-    border: 2px solid var(--secondary-orange) !important;
-    border-radius: 8px !important;
-    text-align: center !important;
+.table td {
+    font-size: 22px;
+    padding: 15px;
+    vertical-align: middle;
 }
 
-.discount-input {
-    font-size: 22px !important;
-    padding: 0.8rem !important;
-    border: 2px solid var(--secondary-orange) !important;
-    border-radius: 8px !important;
-    text-align: center !important;
+/* Input และ Button ในตาราง */
+.table input.form-control {
+    font-size: 22px;
+    padding: 10px;
+    height: auto;
+    min-width: 100px;
 }
 
-/* Buttons */
-.btn-quantity {
-    font-size: 20px !important;
-    padding: 0.8rem 1.2rem !important;
-    border-radius: 8px !important;
+.table .btn {
+    font-size: 22px;
+    padding: 10px 15px;
 }
 
-.btn-remove {
-    font-size: 20px !important;
-    padding: 0.8rem 1.2rem !important;
-    background-color: #dc3545 !important;
-    color: var(--white) !important;
-    border: none !important;
-    border-radius: 8px !important;
+.btn-group .btn {
+    border-radius: 0;
+}
+
+.btn-group .btn:first-child {
+    border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px;
+}
+
+.btn-group .btn:last-child {
+    border-top-right-radius: 4px;
+    border-bottom-right-radius: 4px;
 }
 
 /* แถบด้านล่าง */
-.bottom-bar {
+.fixed-bottom-bar {
     position: fixed;
     bottom: 0;
     left: 0;
     width: 100%;
-    background: var(--white);
-    padding: 1.5rem;
-    box-shadow: 0 -4px 15px rgba(0,0,0,0.1);
+    background: white;
+    padding: 15px;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
     z-index: 1000;
 }
 
-.total-section {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+.fixed-bottom-bar .row {
+    margin: 0;
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
-.total-text {
+/* ส่วนแสดงราคาและส่วนลด */
+.total-label {
     font-size: 28px;
-    color: var(--text-dark);
+    font-weight: bold;
+    margin-right: 15px;
 }
 
 .total-amount {
     font-size: 32px;
-    color: var(--primary-orange);
+    font-weight: bold;
+    color: #28a745;
+    margin-right: 10px;
+}
+
+.total-discount {
+    font-size: 32px;
+    font-weight: bold;
+    color: #dc3545;
+    margin-right: 10px;
+}
+
+.total-currency {
+    font-size: 28px;
     font-weight: bold;
 }
 
-.checkout-button {
-    font-size: 28px !important;
-    padding: 1rem 3rem !important;
-    background-color: var(--primary-orange) !important;
-    border: none !important;
-    border-radius: 10px !important;
-    color: var(--white) !important;
+.total-separator {
+    font-size: 32px;
+    font-weight: bold;
+    color: #6c757d;
+    margin: 0 20px;
 }
 
-/* หน้าต่างชำระเงิน */
-.checkout-overlay {
-    background: rgba(0,0,0,0.8);
-}
-
-.checkout-modal {
-    background: var(--white);
-    border-radius: 15px;
-    padding: 2rem;
-}
-
-.checkout-modal .form-control {
-    font-size: 26px !important;
-    padding: 1rem !important;
-    border: 2px solid var(--secondary-orange) !important;
-    border-radius: 8px !important;
-    margin-bottom: 1.5rem !important;
-}
-
-.checkout-modal label {
+.checkout-btn {
+    height: 60px;
     font-size: 24px;
-    color: var(--text-dark);
-    margin-bottom: 0.5rem;
+    width: 100%;
 }
 
-/* Responsive Design */
-@media (max-width: 1200px) {
-    .search-input, .search-button {
-        font-size: 20px !important;
-    }
-    
-    .table thead th {
-        font-size: 20px;
-    }
-    
-    .table tbody td {
+/* หน้าต่างคิดเงิน */
+#checkout-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0,0,0,0.5);
+    z-index: 9999;
+    display: none;
+}
+
+#checkout-overlay .card {
+    max-width: 500px;
+    margin: 50px auto;
+    border-radius: 5px;
+    background: white;
+}
+
+#checkout-overlay .card-header {
+    background: #007bff;
+    padding: 15px;
+    border-radius: 5px 5px 0 0;
+}
+
+#checkout-overlay .card-body {
+    padding: 20px;
+}
+
+#checkout-overlay label {
+    font-size: 24px;
+    font-weight: bold;
+    display: block;
+    margin-bottom: 10px;
+}
+
+#checkout-overlay .form-control {
+    font-size: 28px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+#checkout-overlay .btn {
+    font-size: 24px;
+    padding: 15px 30px;
+}
+
+/* ขนาดคอลัมน์ในตาราง */
+.table th:nth-child(1), .table td:nth-child(1) { width: 5%; }
+.table th:nth-child(2), .table td:nth-child(2) { width: 10%; }
+.table th:nth-child(3), .table td:nth-child(3) { width: 35%; }
+.table th:nth-child(4), .table td:nth-child(4) { width: 10%; }
+.table th:nth-child(5), .table td:nth-child(5) { width: 10%; }
+.table th:nth-child(6), .table td:nth-child(6) { width: 5%; }
+.table th:nth-child(7), .table td:nth-child(7) { width: 12%; }
+.table th:nth-child(8), .table td:nth-child(8) { width: 8%; }
+.table th:nth-child(9), .table td:nth-child(9) { width: 5%; }
+
+/* ปรับขนาดช่อง input */
+.form-control {
+    min-height: 40px;
+}
+
+/* ปรับขนาดปุ่ม */
+.search-button {
+    min-height: 40px !important;
+    min-width: 150px !important;
+    padding: 8px 20px !important;
+    line-height: 1.2 !important;
+}
+
+/* ขนาดไอคอน */
+.search-button i {
+    font-size: 18px !important;
+}
+
+/* ขนาดตัวหนังสือในปุ่ม */
+.search-text {
+    font-size: 18px !important;
+    font-weight: bold !important;
+}
+
+/* ปรับ placeholder */
+.input-group-lg > .form-control::placeholder {
+    font-size: 20px !important;
+}
+
+/* Responsive */
+@media (max-width: 1366px) {
+    .table th { font-size: 20px; }
+    .table td { font-size: 18px; }
+    .table input.form-control { 
         font-size: 18px;
+        padding: 8px;
     }
-    
-    .total-text {
-        font-size: 24px;
-    }
-    
-    .total-amount {
-        font-size: 28px;
-    }
+    .total-label { font-size: 24px; }
+    .total-amount, .total-discount { font-size: 28px; }
+    .total-currency { font-size: 24px; }
+    .checkout-btn { font-size: 20px; }
 }
 
 @media (max-width: 768px) {
-    .content-wrapper {
-        padding: 1rem;
-    }
-    
-    .search-section {
-        padding: 1rem;
-    }
-    
-    .checkout-button {
-        font-size: 24px !important;
-        padding: 0.8rem 2rem !important;
+    .input-group {
+        width: 90%;
     }
 }
