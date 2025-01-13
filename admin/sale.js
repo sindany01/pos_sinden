@@ -235,6 +235,7 @@ function showCheckout() {
     $('#checkout-overlay').fadeIn(function() {
         $('#pay_amount2').val('').focus();
         $('#change_amount').val('');
+        bindCheckoutEnterKey();  // เพิ่มบรรทัดนี้
     });
 }
 
@@ -274,11 +275,16 @@ function processPayment() {
     
     if(!pay_amount) {
         alert('กรุณาระบุจำนวนเงินที่รับ');
+        $('#pay_amount2').focus();
         return;
     }
     
-    if(parseFloat(pay_amount) < parseFloat(total_amount)) {
+    pay_amount = parseFloat(pay_amount);
+    total_amount = parseFloat(total_amount);
+    
+    if(pay_amount < total_amount) {
         alert('จำนวนเงินไม่พอ');
+        $('#pay_amount2').focus();
         return;
     }
     
@@ -288,13 +294,13 @@ function processPayment() {
         data: {
             pay_amount: total_amount,
             pay_amount2: pay_amount,
-            mem_id: 1 // ต้องแก้ไขให้ตรงกับ ID สมาชิกที่ login
+            mem_id: 1
         },
         success: function(response) {
             clearCartTable();
             
             $.ajax({
-                url: 'clear_cart_session.php',
+                url: 'clear_cart.php',
                 type: 'POST',
                 success: function() {
                     console.log('Cart session cleared');
@@ -304,6 +310,32 @@ function processPayment() {
         }
     });
 }
+
+// เพิ่มฟังก์ชัน bindCheckoutEnterKey
+function bindCheckoutEnterKey() {
+    $('#checkout-overlay input').off('keydown').on('keydown', function(e) {
+        if (e.keyCode === 13) {  // รหัสปุ่ม Enter คือ 13
+            e.preventDefault();
+            
+            // ถ้าอยู่ที่ช่อง pay_amount2 และยังไม่ได้กรอกจำนวนเงิน
+            if ($(this).attr('id') === 'pay_amount2' && !$(this).val()) {
+                // ใส่จำนวนเงินเท่ากับยอดชำระ
+                let total = $('#total_amount').val().replace(/[^0-9.]/g, '');
+                $(this).val(total);
+                calculateChange();
+                return;
+            }
+            
+            // ถ้ากรอกจำนวนเงินแล้วและกด Enter อีกครั้ง
+            if ($(this).attr('id') === 'pay_amount2' && $(this).val()) {
+                processPayment();
+                return;
+            }
+        }
+    });
+}
+
+
 
 // Event Listeners เมื่อโหลดหน้า
 $(document).ready(function() {

@@ -1,12 +1,26 @@
-sale<?php 
+<?php 
 $menu = "sale";
 include("header.php");
 
 // ตรวจสอบและดำเนินการกับตะกร้าสินค้า
 if(isset($_GET['p_id']) && isset($_GET['act'])) {
-    $p_id = mysqli_real_escape_string($condb, $_GET['p_id']);
-    $act = mysqli_real_escape_string($condb, $_GET['act']);
+    $p_id = $_GET['p_id'];
+    $act = $_GET['act'];
     
+    // ส่วนการลบสินค้า
+    if($act == 'remove' && !empty($p_id)) {
+        if(isset($_SESSION['cart'][$p_id])) {
+            unset($_SESSION['cart'][$p_id]);
+            // ลบส่วนลดถ้ามี
+            if(isset($_SESSION['discount'][$p_id])) {
+                unset($_SESSION['discount'][$p_id]);
+            }
+            echo "<script>window.location='list_l.php';</script>";
+            exit();
+        }
+    }
+    
+    // ส่วนเพิ่มสินค้า (คงไว้เหมือนเดิม)
     if($act === 'add' && !empty($p_id)) {
         $check_product = mysqli_query($condb, "SELECT * FROM tbl_product WHERE p_id = '$p_id'");
         if(mysqli_num_rows($check_product) > 0) {
@@ -21,17 +35,17 @@ if(isset($_GET['p_id']) && isset($_GET['act'])) {
         } else {
             echo "<script>
                 alert('ไม่พบสินค้าหรือบาร์โค้ดไม่ถูกต้อง');
-                window.location.href = 'list_l.php';
+                window.location='list_l.php';
             </script>";
             exit();
         }
-        header("Location: list_l.php");
+        echo "<script>window.location='list_l.php';</script>";
         exit();
     }
 }
 
 // เพิ่ม CSS และ JavaScript
-echo '<link rel="stylesheet" href="sale.css">';
+echo '<link rel="stylesheet" href="sale.css?v='.time().'">';  // เพิ่ม ?v=time() เพื่อป้องกัน cache
 echo '<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>';
 echo '<script src="sale.js"></script>';
 ?>

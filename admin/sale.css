@@ -159,51 +159,123 @@ html, body {
     width: 100%;
 }
 
-/* หน้าต่างคิดเงิน */
+/* ปรับแต่งหน้าต่างคิดเงิน */
 #checkout-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(0,0,0,0.5);
+    background: rgba(0,0,0,0.8); /* ทำพื้นหลังเข้มขึ้น */
     z-index: 9999;
     display: none;
 }
 
 #checkout-overlay .card {
-    max-width: 500px;
-    margin: 50px auto;
-    border-radius: 5px;
+    max-width: 800px; /* เพิ่มความกว้างของการ์ด */
+    width: 90%;
+    margin: 30px auto;
+    border-radius: 15px;
     background: white;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.3);
 }
 
 #checkout-overlay .card-header {
     background: #007bff;
-    padding: 15px;
-    border-radius: 5px 5px 0 0;
+    padding: 25px; /* เพิ่มระยะห่าง */
+    border-radius: 15px 15px 0 0;
+}
+
+#checkout-overlay .card-header h5 {
+    font-size: 36px !important; /* เพิ่มขนาดหัวข้อ */
+    font-weight: bold;
 }
 
 #checkout-overlay .card-body {
-    padding: 20px;
+    padding: 40px; /* เพิ่มระยะห่าง */
 }
 
 #checkout-overlay label {
-    font-size: 24px;
+    font-size: 32px; /* เพิ่มขนาดป้ายกำกับ */
     font-weight: bold;
-    display: block;
-    margin-bottom: 10px;
+    color: #333;
+    margin-bottom: 15px;
 }
 
 #checkout-overlay .form-control {
-    font-size: 28px;
-    padding: 15px;
-    margin-bottom: 20px;
+    font-size: 42px !important; /* เพิ่มขนาดตัวอักษรในช่องกรอก */
+    padding: 25px !important;
+    margin-bottom: 30px;
+    border: 2px solid #ddd;
+    border-radius: 10px;
+    background-color: #f8f9fa;
 }
 
+/* สีและขนาดของยอดชำระ */
+#checkout-overlay #total_amount {
+    font-weight: bold;
+    background-color: #e9ecef;
+    color: #28a745;
+    border: 3px solid #28a745;
+}
+
+/* สีและขนาดของช่องรับเงิน */
+#checkout-overlay #pay_amount2 {
+    font-weight: bold;
+    background-color: #fff;
+    color: #007bff;
+    border: 3px solid #007bff;
+}
+
+/* สีและขนาดของเงินทอน */
+#checkout-overlay #change_amount {
+    font-weight: bold;
+    background-color: #e9ecef;
+    color: #dc3545;
+    border: 3px solid #dc3545;
+}
+
+/* ปุ่มในหน้าคิดเงิน */
 #checkout-overlay .btn {
-    font-size: 24px;
-    padding: 15px 30px;
+    font-size: 32px !important; /* เพิ่มขนาดตัวอักษรปุ่ม */
+    padding: 20px !important;
+    border-radius: 10px;
+    font-weight: bold;
+}
+
+#checkout-overlay .btn-secondary {
+    background-color: #6c757d;
+    border: none;
+}
+
+#checkout-overlay .btn-primary {
+    background-color: #28a745;
+    border: none;
+}
+
+/* ปุ่มปิด */
+#checkout-overlay .close {
+    font-size: 42px;
+    font-weight: bold;
+    opacity: 1;
+}
+
+/* ทำให้หน้าต่างอยู่กลางจอพอดี */
+#checkout-overlay .row {
+    margin: 0;
+}
+
+/* ปรับความกว้างของคอลัมน์ */
+#checkout-overlay .col-md-4 {
+    flex: 0 0 80%;
+    max-width: 80%;
+}
+
+/* เพิ่ม margin ด้านล่างสำหรับมือถือ */
+@media (max-width: 768px) {
+    #checkout-overlay .card {
+        margin-bottom: 50px;
+    }
 }
 
 /* ขนาดคอลัมน์ในตาราง */
