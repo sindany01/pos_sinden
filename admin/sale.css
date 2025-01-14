@@ -31,7 +31,7 @@ html, body {
 /* Scanner Section - ความสูงคงที่ */
 .scanner-section {
     background: white;
-    padding: 15px;
+    padding: 5px;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     height: 80px;
@@ -44,28 +44,28 @@ html, body {
     display: flex;
     gap: 10px;
     width: 100%;
+    
 }
 
 #barcode-input {
     font-size: 22px;
+    width: 500px;  /* เพิ่มความกว้างจาก 200px เป็น 300px */
     height: 50px;
     padding: 10px 15px;
     border: 2px solid #007bff;
     border-radius: 6px;
-    flex-grow: 1;
 }
 
 .search-button {
     height: 50px;
-    padding: 0 20px;
-    font-size: 18px;
-    display: flex;
+    padding: 0 15px; 
+    font-size: 30px;
+    display: flex; 
     align-items: center;
-    gap: 8px;
     background-color: #007bff;
     border: none;
     border-radius: 6px;
-    white-space: nowrap;
+    color: white; 
 }
 
 /* Cart Section - ความสูงที่เหลือทั้งหมด */

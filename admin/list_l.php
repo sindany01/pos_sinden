@@ -49,7 +49,7 @@ echo '<script src="sale.js"></script>';
 <div class="content-wrapper">
     <div class="sales-container">
         <!-- Header Section with Totals -->
-        <div class="sales-header">
+        <div class="sales-header d-flex justify-content-between">
             <div class="datetime-display">
                 <i class="fas fa-calendar-alt"></i>
                 <span id="current-date"></span>
@@ -89,9 +89,6 @@ echo '<script src="sale.js"></script>';
         <div class="scanner-section">
             <form id="barcode-form" onsubmit="return handleBarcodeSubmit(event)">
                 <div class="input-group">
-                    <div class="barcode-icon">
-                        <i class="fas fa-barcode"></i>
-                    </div>
                     <input type="text" 
                         id="barcode-input"
                         class="form-control"
