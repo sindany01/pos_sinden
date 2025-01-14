@@ -88,7 +88,6 @@ function addToCartByBarcode(productId) {
                                 qty: currentQty + 1
                             },
                             success: function() {
-                                showToast('เพิ่มจำนวนสินค้าแล้ว', 'success');
                                 reloadCartTable();
                             }
                         });
