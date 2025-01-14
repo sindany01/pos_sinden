@@ -22,6 +22,7 @@
 
 
 <script src="../assets/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <!-- Bootstrap 4 -->
 <script src="../assets/bootstrap.bundle.min.js"></script>
 
@@ -32,7 +33,6 @@
 <script src="../assets/dataTables.bootstrap4.js"></script>
 <script src="../assets/tagsinput.js?v=1"></script>
 
-<script src="../assets/sweetalert2@9.js"></script>
 
 <script src="../assets/adminlte.min.js"></script>
 
@@ -184,5 +184,7 @@ $(function() {
   icon: 'error',
   confirmButtonText: 'ตกลง'
 })
+
 </script>
+<script src="sale.js?v=<?php echo time(); ?>"></script>
 <?php } ?>

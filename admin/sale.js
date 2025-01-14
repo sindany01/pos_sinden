@@ -1,6 +1,32 @@
 let isProcessing = false;
 let inputTimeout = null;
 
+
+
+// เพิ่มเสียงเตือน
+const errorSound = new Audio('../assets/sounds/error.mp3');
+const warningSound = new Audio('../assets/sounds/warning.mp3');
+
+// แก้ไขฟังก์ชัน showToast
+function showToast(message, icon = 'success') {
+    // เล่นเสียงตามประเภทการแจ้งเตือน
+    if (icon === 'error') {
+        errorSound.play();
+    } else if (icon === 'warning') {
+        warningSound.play();
+    }
+
+    Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: icon,
+        title: message,
+        showConfirmButton: false,
+        timer: 2000,
+        zIndex: 10000
+    });
+}
+
 // อัพเดทวันที่และเวลาแบบ Real-time
 function updateDateTime() {
     const now = new Date();
@@ -32,6 +58,7 @@ function handleBarcodeSubmit(event) {
 }
 
 // เพิ่มสินค้าลงตะกร้าด้วยบาร์โค้ด
+// เพิ่มสินค้าลงตะกร้าด้วยบาร์โค้ด
 function addToCartByBarcode(productId) {
     if(isProcessing) return;
     isProcessing = true;
@@ -42,34 +69,55 @@ function addToCartByBarcode(productId) {
         data: { p_id: productId },
         success: function(response) {
             if(response.trim() === 'found') {
-                $.ajax({
-                    url: 'update_cart_qty.php',
-                    type: 'POST',
-                    data: {
-                        p_id: productId,
-                        qty: 1,
-                        add_new: true
-                    },
-                    success: function(updateResponse) {
-                        reloadCartTable();
-                        setTimeout(() => {
-                            bindCheckoutEnterKey();
-                        }, 100);
-                    },
-                    error: function() {
-                        alert('เกิดข้อผิดพลาดในการเพิ่มสินค้า');
-                    },
-                    complete: function() {
-                        isProcessing = false;
+                // เช็คว่ามีสินค้านี้ในตะกร้าแล้วหรือไม่
+                let currentQty = $('.update-qty[data-id="' + productId + '"]').val();
+                let maxQty = $('.update-qty[data-id="' + productId + '"]').attr('max');
+                
+                if (currentQty && maxQty) {
+                    // ถ้ามีสินค้านี้ในตะกร้าแล้ว
+                    currentQty = parseInt(currentQty);
+                    maxQty = parseInt(maxQty);
+                    
+                    if (currentQty < maxQty) {
+                        // ถ้ายังไม่เกินจำนวนในสต็อก ให้เพิ่มจำนวน
+                        $.ajax({
+                            url: 'update_cart_qty.php',
+                            type: 'POST',
+                            data: {
+                                p_id: productId,
+                                qty: currentQty + 1
+                            },
+                            success: function() {
+                                showToast('เพิ่มจำนวนสินค้าแล้ว', 'success');
+                                reloadCartTable();
+                            }
+                        });
+                    } else {
+                        showToast('ไม่สามารถเพิ่มจำนวนได้ เนื่องจากเกินจำนวนในสต็อก', 'warning');
                     }
-                });
+                } else {
+                    // ถ้ายังไม่มีสินค้านี้ในตะกร้า
+                    $.ajax({
+                        url: 'update_cart_qty.php',
+                        type: 'POST',
+                        data: {
+                            p_id: productId,
+                            qty: 1,
+                            add_new: true
+                        },
+                        success: function() {
+                            showToast('เพิ่มสินค้าสำเร็จ', 'success');
+                            reloadCartTable();
+                        }
+                    });
+                }
             } else {
-                alert('ไม่พบสินค้าหรือบาร์โค้ดไม่ถูกต้อง');
-                isProcessing = false;
+                showToast('ไม่พบสินค้าหรือบาร์โค้ดไม่ถูกต้อง', 'error');
             }
+            isProcessing = false;
         },
         error: function() {
-            alert('เกิดข้อผิดพลาดในการตรวจสอบสินค้า');
+            showToast('เกิดข้อผิดพลาดในการตรวจสอบสินค้า', 'error');
             isProcessing = false;
         }
     });
@@ -197,7 +245,7 @@ function decrementQuantity(button) {
             }
         });
     } else {
-        alert('ไม่สามารถลดจำนวนสินค้าได้ เนื่องจากต้องมีอย่างน้อย 1 ชิ้น');
+        showToast('ไม่สามารถลดจำนวนสินค้าได้ เนื่องจากต้องมีอย่างน้อย 1 ชิ้น', 'warning');
     }
     $('#barcode-input').focus();
 }
@@ -222,7 +270,7 @@ function incrementQuantity(button) {
             }
         });
     } else {
-        alert('ไม่สามารถเพิ่มจำนวนได้ เนื่องจากเกินจำนวนในสต็อก');
+        showToast('ไม่สามารถเพิ่มจำนวนได้ เนื่องจากเกินจำนวนในสต็อก', 'warning');
     }
     $('#barcode-input').focus();
 }
@@ -235,7 +283,7 @@ function showCheckout() {
     $('#checkout-overlay').fadeIn(function() {
         $('#pay_amount2').val('').focus();
         $('#change_amount').val('');
-        bindCheckoutEnterKey();  // เพิ่มบรรทัดนี้
+        bindCheckoutEnterKey();
     });
 }
 
@@ -274,7 +322,7 @@ function processPayment() {
     var total_amount = $('#total_amount').val().replace(/[^0-9.]/g, '');
     
     if(!pay_amount) {
-        alert('กรุณาระบุจำนวนเงินที่รับ');
+        showToast('กรุณาระบุจำนวนเงินที่รับ', 'warning');
         $('#pay_amount2').focus();
         return;
     }
@@ -283,7 +331,7 @@ function processPayment() {
     total_amount = parseFloat(total_amount);
     
     if(pay_amount < total_amount) {
-        alert('จำนวนเงินไม่พอ');
+        showToast('จำนวนเงินไม่พอ', 'warning');
         $('#pay_amount2').focus();
         return;
     }
@@ -298,12 +346,12 @@ function processPayment() {
         },
         success: function(response) {
             clearCartTable();
+            showToast('บันทึกการขายเรียบร้อย', 'success');
             
             $.ajax({
                 url: 'clear_cart.php',
                 type: 'POST',
                 success: function() {
-                    console.log('Cart session cleared');
                     location.reload();
                 }
             });
@@ -314,19 +362,16 @@ function processPayment() {
 // เพิ่มฟังก์ชัน bindCheckoutEnterKey
 function bindCheckoutEnterKey() {
     $('#checkout-overlay input').off('keydown').on('keydown', function(e) {
-        if (e.keyCode === 13) {  // รหัสปุ่ม Enter คือ 13
+        if (e.keyCode === 13) {
             e.preventDefault();
             
-            // ถ้าอยู่ที่ช่อง pay_amount2 และยังไม่ได้กรอกจำนวนเงิน
             if ($(this).attr('id') === 'pay_amount2' && !$(this).val()) {
-                // ใส่จำนวนเงินเท่ากับยอดชำระ
                 let total = $('#total_amount').val().replace(/[^0-9.]/g, '');
                 $(this).val(total);
                 calculateChange();
                 return;
             }
             
-            // ถ้ากรอกจำนวนเงินแล้วและกด Enter อีกครั้ง
             if ($(this).attr('id') === 'pay_amount2' && $(this).val()) {
                 processPayment();
                 return;
@@ -335,15 +380,13 @@ function bindCheckoutEnterKey() {
     });
 }
 
-
-
 // Event Listeners เมื่อโหลดหน้า
 $(document).ready(function() {
-    // อัพเดทวันที่และเวลา
+    // อัพเดทเวลาทุกวินาที
     updateDateTime();
     setInterval(updateDateTime, 1000);
     
-    // Event listener สำหรับช่องบาร์โค้ด
+    // จัดการกด Enter ที่ช่องบาร์โค้ด
     $('#barcode-input').on('keydown', function(e) {
         if (e.keyCode === 13) {
             e.preventDefault();
@@ -360,20 +403,14 @@ $(document).ready(function() {
         }
     });
 
-    // Setup event handlers
+    // ตั้งค่า event handlers
     setupEventHandlers();
     
     // โฟกัสที่ช่องบาร์โค้ด
     $('#barcode-input').focus();
-    
-    // ป้องกันการ submit form
-    $('.btn-success').on('click', function(e) {
-        e.preventDefault();
-        return false;
-    });
 });
 
-// Event listener สำหรับปุ่ม ESC
+// กด ESC เพื่อปิด Modal
 $(document).keydown(function(e) {
     if (e.key === "Escape") {
         hideCheckout();

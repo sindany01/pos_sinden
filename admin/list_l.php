@@ -49,7 +49,7 @@ echo '<script src="sale.js"></script>';
 <div class="content-wrapper">
     <div class="sales-container">
         <!-- Header Section with Totals -->
-        <div class="sales-header d-flex justify-content-between">
+        <div class="sales-header d-flex justify-content-between align-items-center"> 
             <div class="datetime-display">
                 <i class="fas fa-calendar-alt"></i>
                 <span id="current-date"></span>
@@ -75,7 +75,7 @@ echo '<script src="sale.js"></script>';
                     }
                 }
                 ?>
-                <span class="total-label">ส่วนลดรวม:</span>
+                <span class="total-label-1">ส่วนลดรวม:</span>
                 <span class="total-value discount-value" id="total-discount"><?= number_format($total_discount,2) ?></span>
                 <span class="currency">บาท</span>
                 <span class="separator">|</span>

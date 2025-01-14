@@ -45,6 +45,24 @@
     }
   </style>
 
+<style>
+.colored-toast.swal2-icon-success {
+    background-color: #a5dc86 !important;
+}
+.colored-toast.swal2-icon-error {
+    background-color: #f27474 !important;
+}
+.colored-toast.swal2-icon-warning {
+    background-color: #f8bb86 !important;
+}
+.colored-toast.swal2-icon-info {
+    background-color: #3fc3ee !important;
+}
+.colored-toast .swal2-title {
+    color: white;
+}
+</style>
+
 
   <style type="text/css">
   @media print{
@@ -90,6 +108,11 @@
         font-size: 1.2rem;
         margin-bottom: 20px;
     }
+    
+    .swal2-container {
+        z-index: 10000 !important;
+    }
+
 </style>
 </head>
 
