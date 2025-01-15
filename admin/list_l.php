@@ -41,298 +41,216 @@ if(isset($_GET['p_id']) && isset($_GET['act'])) {
     }
 }
 
-// คำนวณยอดรวมและส่วนลด
-$total_discount = 0;
-$total = 0;
-if(!empty($_SESSION['cart'])) {
-    foreach($_SESSION['cart'] as $p_id=>$qty) {
-        if(isset($_SESSION['discount'][$p_id])) {
-            $total_discount += $_SESSION['discount'][$p_id];
-        }
-        $sql = "SELECT * FROM tbl_product WHERE p_id=$p_id";
-        $query = mysqli_query($condb, $sql);
-        if ($query && $row = mysqli_fetch_array($query)) {
-            $sum = $row['p_price'] * $qty;
-            if(isset($_SESSION['discount'][$p_id])) {
-                $sum -= $_SESSION['discount'][$p_id];
-            }
-            $total += $sum;
-        }
-    }
-}
-
 echo '<link rel="stylesheet" href="sale.css?v='.time().'">';
+echo '<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>';
+echo '<script src="sale.js"></script>';
 ?>
 
 <div class="content-wrapper">
-    <section class="content">
-        <div class="container-fluid">
-            <div class="row">
-                <!-- ส่วนแสดงวันที่และเวลา -->
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-body">
-                            <h4 class="text-primary mb-0">
-                                <i class="fas fa-calendar-alt"></i> 
-                                <span id="current-date"></span>
-                            </h4>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- ส่วนแสดงยอดรวม -->
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-body text-right">
-                            <h4>ส่วนลดรวม: ฿<span id="total-discount"><?= number_format($total_discount, 2) ?></span></h4>
-                            <h3 class="text-primary mb-0"> ฿<span id="total-amount"><?= number_format($total, 2) ?></span></h3>
-                        </div>
-                    </div>
-                </div>
+    <div class="sales-container">
+        <!-- Header Section with Totals -->
+        <div class="sales-header d-flex justify-content-between align-items-center"> 
+            <div class="datetime-display">
+                <i class="fas fa-calendar-alt"></i>
+                <span id="current-date"></span>
             </div>
-
-            <!-- ส่วนสแกนบาร์โค้ด -->
-            <div class="card mb-3">
-                <div class="card-body">
-                    <form id="barcode-form" onsubmit="return handleBarcodeSubmit(event)">
-                        <div class="input-group">
-                            <input type="text" 
-                                id="barcode-input" 
-                                class="form-control form-control-lg" 
-                                placeholder="สแกนบาร์โค้ดสินค้า หรือ กด Enter เพื่อคิดเงิน"
-                                autocomplete="off"
-                                autofocus>
-                            <div class="input-group-append">
-                                <button type="submit" class="btn btn-primary btn-lg px-4">
-                                    <i class="fas fa-barcode"></i> สแกน
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <!-- ส่วนตารางสินค้า -->
-            <div class="card">
-                <div class="card-body p-0">
-                    <div class="table-responsive" style="height: calc(100vh - 450px);">
-                        <table class="table table-hover mb-0">
-                            <thead class="bg-primary text-white">
-                                <tr>
-                                    <th class="text-center align-middle" width="5%">ลำดับ</th>
-                                    <th class="text-center align-middle" width="15%">บาร์โค้ด</th>
-                                    <th class="align-middle" width="25%">สินค้า</th>
-                                    <th class="text-center align-middle" width="10%">จำนวน</th>
-                                    <th class="text-right align-middle" width="10%">ราคา/หน่วย</th>
-                                    <th class="text-center align-middle" width="10%">ส่วนลด</th>
-                                    <th class="text-right align-middle" width="10%">รวม</th>
-                                    <th class="text-center align-middle" width="10%">ปรับจำนวน</th>
-                                    <th class="text-center align-middle" width="5%">ลบ</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php
-                                if(!empty($_SESSION['cart'])) {
-                                    $i = 0;
-                                    foreach($_SESSION['cart'] as $p_id=>$qty) {
-                                        $sql = "SELECT * FROM tbl_product WHERE p_id=$p_id";
-                                        $query = mysqli_query($condb, $sql);
-                                        if ($query && $row = mysqli_fetch_array($query)) {
-                                            $sum = $row['p_price'] * $qty;
-                                            $discount = isset($_SESSION['discount'][$p_id]) ? $_SESSION['discount'][$p_id] : 0;
-                                            $final_sum = $sum - $discount;
-                                            ?>
-                                            <tr>
-                                                <td class="text-center align-middle"><?= ++$i ?></td>
-                                                <td class="text-center align-middle"><?= $p_id ?></td>
-                                                <td class="align-middle">
-                                                    <div class="font-weight-bold"><?= $row["p_name"] ?></div>
-                                                    <small class="text-muted">สต๊อก: <?= $row['p_qty'] ?></small>
-                                                </td>
-                                                <td class="text-center align-middle">
-                                                    <input type="number" 
-                                                        value="<?= $qty ?>" 
-                                                        class="form-control update-qty text-center" 
-                                                        min="1" 
-                                                        max="<?= $row['p_qty'] ?>"
-                                                        data-id="<?= $p_id ?>"
-                                                        data-price="<?= $row["p_price"] ?>"
-                                                        oninput="updatePrice(this)"/>
-                                                </td>
-                                                <td class="text-right align-middle"><?= number_format($row["p_price"], 2) ?></td>
-                                                <td class="text-center align-middle">
-                                                    <input type="number"
-                                                        value="<?= $discount ?>"
-                                                        class="form-control discount-input text-center"
-                                                        min="0"
-                                                        max="<?= $sum ?>"
-                                                        data-id="<?= $p_id ?>"
-                                                        oninput="updatePrice($(this).closest('tr').find('.update-qty'))"/>
-                                                </td>
-                                                <td class="text-right align-middle sum-<?= $p_id ?>"><?= number_format($final_sum, 2) ?></td>
-                                                <td class="text-center align-middle">
-                                                    <div class="btn-group">
-                                                        <button type="button" 
-                                                            class="btn btn-danger"
-                                                            onclick="decrementQuantity(this)"
-                                                            data-id="<?= $p_id ?>">
-                                                            <i class="fas fa-minus"></i>
-                                                        </button>
-                                                        <button type="button" 
-                                                            class="btn btn-success"
-                                                            onclick="incrementQuantity(this)"
-                                                            data-id="<?= $p_id ?>"
-                                                            data-max="<?= $row['p_qty'] ?>">
-                                                            <i class="fas fa-plus"></i>
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                                <td class="text-center align-middle">
-                                                    <a href="list_l.php?p_id=<?= $p_id ?>&act=remove" 
-                                                    class="btn btn-danger">
-                                                        <i class="fas fa-trash"></i>
-                                                    </a>
-                                                </td>
-                                            </tr>
-                                            <?php
-                                        }
-                                    }
-                                }
-                                ?>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ส่วนปุ่มคิดเงิน -->
-            <div class="text-right mt-3">
-                <button type="button" class="btn btn-primary btn-lg px-4 buttonsale" onclick="showCheckout()">
-                    <i class="fas fa-cash-register"></i> คิดเงิน (Enter)
-                </button>
+            <div class="totals-display">
+                <?php
+                $total_discount = 0;
+                $total = 0;
+                if(!empty($_SESSION['cart'])) {
+                    foreach($_SESSION['cart'] as $p_id=>$qty) {
+                        if(isset($_SESSION['discount'][$p_id])) {
+                            $total_discount += $_SESSION['discount'][$p_id];
+                        }
+                        $sql = "SELECT * FROM tbl_product WHERE p_id=$p_id";
+                        $query = mysqli_query($condb, $sql);
+                        if ($query && $row = mysqli_fetch_array($query)) {
+                            $sum = $row['p_price'] * $qty;
+                            if(isset($_SESSION['discount'][$p_id])) {
+                                $sum -= $_SESSION['discount'][$p_id];
+                            }
+                            $total += $sum;
+                        }
+                    }
+                }
+                ?>
+                <span class="total-label-1">ส่วนลดรวม:</span>
+                <span class="total-value discount-value" id="total-discount"><?= number_format($total_discount,2) ?></span>
+                <span class="currency">บาท</span>
+                <span class="separator">|</span>
+                <span class="total-label">ราคารวม:</span>
+                <span class="total-value grand-value" id="total-amount"><?= number_format($total,2) ?></span>
+                <span class="currency">บาท</span>
             </div>
         </div>
-    </section>
 
-    <!-- Modal คิดเงิน -->
-    <div id="checkout-overlay" style="display: none;" class="modal-overlay">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header bg-primary text-white">
-                    <h4 class="modal-title mb-0">ชำระเงิน</h4>
-                    <button type="button" class="close text-white" onclick="hideCheckout()">
-                        <span aria-hidden="true">&times;</span>
+        <!-- Barcode Scanner Section -->
+        <div class="scanner-section">
+            <form id="barcode-form" onsubmit="return handleBarcodeSubmit(event)">
+                <div class="input-group">
+                    <input type="text" 
+                        id="barcode-input"
+                        class="form-control"
+                        placeholder="สแกนบาร์โค้ดสินค้า หรือ กด Enter เพื่อคิดเงิน"
+                        autocomplete="off"
+                        autofocus>
+                    <div class="input-group-append">
+                        <button class="btn btn-primary search-button" type="submit">
+                            <i class="fas fa-search"></i>
+                            <span>ค้นหาสินค้า</span>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Cart Table -->
+        <div class="cart-section">
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>ลำดับ</th>
+                            <th>บาร์โค้ด</th>
+                            <th>สินค้า</th>
+                            <th>จำนวน</th>
+                            <th>ราคา/หน่วย</th>
+                            <th>ส่วนลด</th>
+                            <th>รวม</th>
+                            <th>ปรับจำนวน</th>
+                            <th>ลบ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php
+                        if(!empty($_SESSION['cart'])) {
+                            foreach($_SESSION['cart'] as $p_id=>$qty) {
+                                $sql = "SELECT * FROM tbl_product WHERE p_id=$p_id";
+                                $query = mysqli_query($condb, $sql);
+                                if ($query && $row = mysqli_fetch_array($query)) {
+                                    $sum = $row['p_price'] * $qty;
+                                    ?>
+                                    <tr>
+                                        <td class="text-center"><?= @$i+=1 ?></td>
+                                        <td class="text-center"><?= $p_id ?></td>
+                                        <td>
+                                            <div class="product-info">
+                                                <span class="product-name"><?= $row["p_name"] ?></span>
+                                                <span class="stock-info">สต๊อก <?= $row['p_qty'] ?></span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <input type="number" 
+                                                name="amount[<?= $p_id ?>]" 
+                                                value="<?= $qty ?>" 
+                                                class="form-control update-qty" 
+                                                min="1" 
+                                                max="<?= $row['p_qty'] ?>"
+                                                data-id="<?= $p_id ?>"
+                                                data-price="<?= $row["p_price"] ?>"
+                                                oninput="updatePrice(this)"/>
+                                        </td>
+                                        <td class="text-right price-<?= $p_id ?>">
+                                            <?= number_format($row["p_price"],2) ?>
+                                        </td>
+                                        <td>
+                                            <input type="number"
+                                                name="discount[<?= $p_id ?>]"
+                                                value="<?= isset($_SESSION['discount'][$p_id]) ? $_SESSION['discount'][$p_id] : 0 ?>"
+                                                class="form-control discount-input"
+                                                min="0"
+                                                max="<?= $sum ?>"
+                                                data-id="<?= $p_id ?>"
+                                                oninput="updatePrice($(this).closest('tr').find('.update-qty'))"/>
+                                        </td>
+                                        <td class="text-right sum-<?= $p_id ?>">
+                                            <?= number_format($sum - (isset($_SESSION['discount'][$p_id]) ? $_SESSION['discount'][$p_id] : 0),2) ?>
+                                        </td>
+                                        <td>
+                                            <div class="quantity-controls">
+                                                <button type="button" 
+                                                        class="btn btn-danger"
+                                                        onclick="decrementQuantity(this)"
+                                                        data-id="<?= $p_id ?>">
+                                                    <i class="fas fa-minus"></i>
+                                                </button>
+                                                <button type="button" 
+                                                        class="btn btn-success"
+                                                        onclick="incrementQuantity(this)"
+                                                        data-id="<?= $p_id ?>"
+                                                        data-max="<?= $row['p_qty'] ?>">
+                                                    <i class="fas fa-plus"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <a href="list_l.php?p_id=<?= $p_id ?>&act=remove" 
+                                               class="btn btn-danger delete-btn">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    <?php
+                                }
+                            }
+                        }
+                        ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Checkout Button Section -->
+        <div class="checkout-section">
+            <button type="button" class="btn btn-primary checkout-btn" onclick="showCheckout()">
+                <i class="fas fa-cash-register"></i>
+                <span>คิดเงิน</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Checkout Overlay -->
+    <div id="checkout-overlay">
+        <div class="checkout-dialog">
+            <div class="checkout-content">
+                <div class="checkout-header">
+                    <h3>ชำระเงิน</h3>
+                    <button type="button" class="close-btn" onclick="hideCheckout()">
+                        <i class="fas fa-times"></i>
                     </button>
                 </div>
-                <div class="modal-body">
+                <div class="checkout-body">
                     <div class="form-group">
-                        <label class="font-weight-bold">ยอดชำระ</label>
-                        <input type="text" id="total_amount" class="form-control form-control-lg text-right" readonly>
+                        <label>ยอดชำระ</label>
+                        <input type="text" id="total_amount" class="form-control" readonly>
                     </div>
                     <div class="form-group">
-                        <label class="font-weight-bold">รับเงิน</label>
+                        <label>รับเงิน</label>
                         <input type="number" 
-                            id="pay_amount2" 
-                            class="form-control form-control-lg text-right" 
-                            min="0" 
-                            step="0.01"
-                            onkeyup="calculateChange()">
+                               id="pay_amount2" 
+                               class="form-control" 
+                               required 
+                               min="0" 
+                               step="0.01"
+                               onkeyup="calculateChange();">
                     </div>
                     <div class="form-group">
-                        <label class="font-weight-bold">เงินทอน</label>
-                        <input type="text" id="change_amount" class="form-control form-control-lg text-right" readonly>
+                        <label>เงินทอน</label>
+                        <input type="text" id="change_amount" class="form-control" readonly>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary btn-lg" onclick="hideCheckout()">
-                        ยกเลิก (Esc)
+                <div class="checkout-footer">
+                    <button type="button" class="btn btn-secondary" onclick="hideCheckout()">
+                        ยกเลิก
                     </button>
-                    <button type="button" class="btn btn-primary btn-lg" onclick="processPayment()">
-                        ยืนยัน (Enter)
+                    <button type="button" class="btn btn-primary" onclick="processPayment()">
+                        ยืนยัน
                     </button>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
-<!-- CSS -->
-<style>
-/* Modal Styles */
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.5);
-    z-index: 1050;
-    display: none;
-}
-
-.modal-dialog {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 90%;
-    max-width: 500px;
-    margin: 0;
-}
-
-/* Input Styles */
-.update-qty,
-.discount-input {
-    width: 80px;
-}
-
-.form-control-lg {
-    font-size: 1.25rem;
-}
-
-/* Table Styles */
-.table thead th {
-    position: sticky;
-    top: 0;
-    z-index: 1;
-    font-size: 1.1rem;
-    white-space: nowrap;
-    background-color:rgb(255, 149, 0);
-}
-
-.table td {
-    font-size: 1.1rem;
-}
-
-/* Custom Styles */
-.card-title {
-    font-size: 1.5rem;
-}
-
-.bg-primary {
-    background-color:rgb(255, 162, 0) !important;
-}
-
-.text-primary {
-    color:rgb(241, 154, 14) !important;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-    .update-qty,
-    .discount-input {
-        width: 60px;
-    }
-    
-    .table td {
-        font-size: 1rem;
-    }
-}
-</style>
-
-<!-- JavaScript Libraries -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="sale.js?v=<?= time() ?>"></script>
 
 <?php include('footer.php'); ?>
